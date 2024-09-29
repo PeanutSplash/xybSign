@@ -756,6 +756,6 @@ cron.schedule(`${signOutMinute} ${signOutHour} * * *`, signOut, {
   timezone: "Asia/Shanghai",
 });
 
-console.log("自动签到签退服务已启动");
+console.log("校友邦自动签到签退服务已启动");
 console.log(`签到时间: ${config.signInTime}`);
 console.log(`签退时间: ${config.signOutTime}`);
