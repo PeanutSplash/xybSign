@@ -691,6 +691,9 @@ async function run(mode) {
       location: "",
       signImagePath: "",
       needReport: false,
+      qmsgKey: "",
+      qmsgTo: "",
+      wxPusherToken: "",
     };
     processConfig.accounts = processConfig.accounts.map((e) => ({
       ...confTemp,
@@ -714,11 +717,12 @@ async function run(mode) {
   // 为每个用户单独发送消息
   for (const result of results) {
     console.log(`${result.username}的执行结果:\n${result.result}`);
-    if (config.qmsgKey) {
-      await sendMsg(result.result, config, result.username);
+    const account = config.accounts.find(acc => acc.username === result.username);
+    if (account.qmsgKey) {
+      await sendMsg(result.result, account, result.username);
     }
-    if (config.wxPusherToken) {
-      await sendWxPusherMsg(result.result, config, result.username);
+    if (account.wxPusherToken) {
+      await sendWxPusherMsg(result.result, account, result.username);
     }
   }
 }

@@ -1,13 +1,13 @@
 const axios = require("axios");
 
-const sendMsg = async (msg, config, username) => {
+const sendMsg = async (msg, account, username) => {
   let data = { msg: `用户 ${username} 的执行结果:\n${msg}` };
-  if (config.qmsgTo) {
-    data.qq = config.qmsgTo;
+  if (account.qmsgTo) {
+    data.qq = account.qmsgTo;
   }
   try {
     const response = await axios.post(
-      "https://qmsg.zendee.cn/send/" + config.qmsgKey,
+      "https://qmsg.zendee.cn/send/" + account.qmsgKey,
       data,
       {
         headers: {

@@ -12,6 +12,9 @@ const config = {
       location: "113.936557,22.540476999999974", //经纬度 (可选),例如 "120.210792,30.246026"、"经度,纬度",不填写则自动获取（推荐）
       // signImagePath: "./images/1.jpeg", //签到图片
       // needReport: false, //是否自动填写周报
+      qmsgKey: "", // 每个用户的qmsg酱key
+      qmsgTo: "", // 每个用户推送的qq号,用,分隔(可选)
+      wxPusherToken: "", // 每个用户的WxPusher的appToken
     },
     // 添加多个账户
     // {
@@ -19,15 +22,15 @@ const config = {
     //   password: "",
     //   openId: "",
     //   unionId: "",
-    //   sign: true, //是否自动签到
-    //   reSign: true, //是否重新签到
-    //   signImagePath: "./images/1.jpeg", //签到图片
-    //   needReport: false, //是否自动填写周报
+    //   sign: true,
+    //   reSign: true,
+    //   signImagePath: "./images/1.jpeg",
+    //   needReport: false,
+    //   qmsgKey: "",
+    //   qmsgTo: "",
+    //   wxPusherToken: "",
     // },
   ],
-  qmsgKey: "", //qmsg酱key
-  qmsgTo: "", //推送的qq号,用,分隔(可选)
-  wxPusherToken: "SPT_HZNxQGgxpU4oZxWveCWJOWOFOc65", // WxPusher的appToken
 };
 
 const apis = {
