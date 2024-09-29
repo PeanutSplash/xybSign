@@ -617,7 +617,6 @@ ${result}`;
     // await sendMsg(result);
   };
   await xyb();
-  // 修改返回值,包含用户名和结果
   return {
     username: config.username,
     result: results,
@@ -760,6 +759,6 @@ cron.schedule(`${signOutMinute} ${signOutHour} * * *`, signOut, {
   timezone: "Asia/Shanghai",
 });
 
-console.log("校友邦自动签到签退服务已启动");
+console.log("xybSign服务已启动");
 console.log(`签到时间: ${config.signInTime}`);
 console.log(`签退时间: ${config.signOutTime}`);
