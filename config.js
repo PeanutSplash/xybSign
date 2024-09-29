@@ -1,5 +1,6 @@
 const config = {
-  mode: "in", // 签到:in,签退:out
+  signInTime: "09:00", // 签到时间
+  signOutTime: "18:00", // 签退时间
   accounts: [
     {
       username: "16602046914", //用户名
@@ -28,12 +29,6 @@ const config = {
   qmsgTo: "", //推送的qq号,用,分隔(可选)
   wxPusherToken: "SPT_HZNxQGgxpU4oZxWveCWJOWOFOc65", // WxPusher的appToken
 };
-
-const modeCN = {
-  in: "签到",
-  out: "签退",
-};
-config.modeCN = modeCN[config.mode];
 
 const apis = {
   login: "login/login.action",

@@ -6,6 +6,7 @@ const axios = require("axios");
 const fs = require("fs");
 const FormData = require("form-data");
 const md5 = require("blueimp-md5");
+const cron = require('node-cron');
 
 async function xybSign(config) {
   let results = "";
@@ -669,7 +670,8 @@ const parseEnvArgv = (argv) => {
   return res;
 };
 
-async function run() {
+// Modify the run function to accept a mode parameter
+async function run(mode) {
   let results = [];
 
   let processConfig = parseEnvArgv(process.argv);
@@ -690,20 +692,14 @@ async function run() {
       ...confTemp,
       ...e,
     }));
-    const modeMap = {
-      in: "签到",
-      out: "签退",
-    };
-    processConfig.modeCN = modeMap[processConfig.mode];
     config = processConfig;
   } else {
     console.log("====使用config.js中配置====");
   }
 
   for (const account of config.accounts) {
-    // console.log(account);
-    account.mode = config.mode;
-    account.modeCN = config.modeCN;
+    account.mode = mode;
+    account.modeCN = mode === 'in' ? '签到' : '签退';
     account.password = md5(account.password);
     results.push(await xybSign(account));
     console.log(`====当前账号(${account.username})执行结束====`);
@@ -718,4 +714,33 @@ async function run() {
   }
 }
 
-run();
+// 签到函数
+const signIn = async () => {
+  console.log('执行签到...', new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }));
+  await run('in');
+};
+
+// 签退函数
+const signOut = async () => {
+  console.log('执行签退...', new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }));
+  await run('out');
+};
+
+// 从配置中获取签到和签退时间
+const [signInHour, signInMinute] = config.signInTime.split(':');
+const [signOutHour, signOutMinute] = config.signOutTime.split(':');
+
+// 设置定时任务
+cron.schedule(`${signInMinute} ${signInHour} * * *`, signIn, {
+  scheduled: true,
+  timezone: "Asia/Shanghai"
+});
+
+cron.schedule(`${signOutMinute} ${signOutHour} * * *`, signOut, {
+  scheduled: true,
+  timezone: "Asia/Shanghai"
+});
+
+console.log('自动签到签退服务已启动');
+console.log(`签到时间: ${config.signInTime}`);
+console.log(`签退时间: ${config.signOutTime}`);
