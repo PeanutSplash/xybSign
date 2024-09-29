@@ -1,6 +1,7 @@
 const { getHeaders } = require("./utils/xyb.js");
 let { config, apis, reports } = require("./config.js");
 const { sendMsg } = require("./utils/qmsg.js");
+const { sendWxPusherMsg } = require("./utils/wxpusher.js");
 const axios = require("axios");
 const fs = require("fs");
 const FormData = require("form-data");
@@ -659,7 +660,11 @@ const parseEnvArgv = (argv) => {
   }
   for (const cfs of configStrs) {
     const cache = cfs.split("=");
-    res[cache[0]] = cache[1];
+    if (cache[0] === "wxPusherToken") {
+      res[cache[0]] = cache[1];
+    } else {
+      res[cache[0]] = cache[1];
+    }
   }
   return res;
 };
@@ -707,6 +712,9 @@ async function run() {
   console.log(results.join("\n"));
   if (config.qmsgKey) {
     await sendMsg(results.join("\n"), config);
+  }
+  if (config.wxPusherToken) {
+    await sendWxPusherMsg(results.join("\n"), config);
   }
 }
 
