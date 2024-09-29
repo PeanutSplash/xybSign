@@ -6,7 +6,7 @@ const axios = require("axios");
 const fs = require("fs");
 const FormData = require("form-data");
 const md5 = require("blueimp-md5");
-const cron = require('node-cron');
+const cron = require("node-cron");
 
 async function xybSign(config) {
   let results = "";
@@ -617,7 +617,11 @@ ${result}`;
     // await sendMsg(result);
   };
   await xyb();
-  return results;
+  // 修改返回值,包含用户名和结果
+  return {
+    username: config.username,
+    result: results,
+  };
 }
 
 const parseEnvArgv = (argv) => {
@@ -699,48 +703,59 @@ async function run(mode) {
 
   for (const account of config.accounts) {
     account.mode = mode;
-    account.modeCN = mode === 'in' ? '签到' : '签退';
+    account.modeCN = mode === "in" ? "签到" : "签退";
     account.password = md5(account.password);
-    results.push(await xybSign(account));
+    const result = await xybSign(account);
+    results.push(result);
     console.log(`====当前账号(${account.username})执行结束====`);
   }
   console.log("====所有账号执行结束====");
-  console.log(results.join("\n"));
-  if (config.qmsgKey) {
-    await sendMsg(results.join("\n"), config);
-  }
-  if (config.wxPusherToken) {
-    await sendWxPusherMsg(results.join("\n"), config);
+
+  // 为每个用户单独发送消息
+  for (const result of results) {
+    console.log(`${result.username}的执行结果:\n${result.result}`);
+    if (config.qmsgKey) {
+      await sendMsg(result.result, config, result.username);
+    }
+    if (config.wxPusherToken) {
+      await sendWxPusherMsg(result.result, config, result.username);
+    }
   }
 }
 
 // 签到函数
 const signIn = async () => {
-  console.log('执行签到...', new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }));
-  await run('in');
+  console.log(
+    "执行签到...",
+    new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })
+  );
+  await run("in");
 };
 
 // 签退函数
 const signOut = async () => {
-  console.log('执行签退...', new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }));
-  await run('out');
+  console.log(
+    "执行签退...",
+    new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })
+  );
+  await run("out");
 };
 
 // 从配置中获取签到和签退时间
-const [signInHour, signInMinute] = config.signInTime.split(':');
-const [signOutHour, signOutMinute] = config.signOutTime.split(':');
+const [signInHour, signInMinute] = config.signInTime.split(":");
+const [signOutHour, signOutMinute] = config.signOutTime.split(":");
 
 // 设置定时任务
 cron.schedule(`${signInMinute} ${signInHour} * * *`, signIn, {
   scheduled: true,
-  timezone: "Asia/Shanghai"
+  timezone: "Asia/Shanghai",
 });
 
 cron.schedule(`${signOutMinute} ${signOutHour} * * *`, signOut, {
   scheduled: true,
-  timezone: "Asia/Shanghai"
+  timezone: "Asia/Shanghai",
 });
 
-console.log('自动签到签退服务已启动');
+console.log("自动签到签退服务已启动");
 console.log(`签到时间: ${config.signInTime}`);
 console.log(`签退时间: ${config.signOutTime}`);
