@@ -14,7 +14,7 @@ const config = {
       // needReport: false, //是否自动填写周报
       qmsgKey: "", // 每个用户的qmsg酱key
       qmsgTo: "", // 每个用户推送的qq号,用,分隔(可选)
-      wxPusherToken: "", // 每个用户的WxPusher的appToken
+      wxPusherToken: "SPT_HZNxQGgxpU4oZxWveCWJOWOFOc65", // 每个用户的WxPusher的appToken
     },
     // 添加多个账户
     // {
