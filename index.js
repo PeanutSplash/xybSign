@@ -265,67 +265,86 @@ async function xybSign(config) {
 
   // 签到/签退
   const doClock = async (taskInfo) => {
-    const resp = await $http.post(apis.clockDefault, {
-      planId: taskInfo.planId,
-    });
-    const { clockVo, unStartClockVo } = resp;
-    const traineeId = clockVo?.traineeId || unStartClockVo?.traineeId;
-    console.log(">> 获取traineeId成功：", traineeId);
-    const { res, postInfo, isSignin, isSignout } = await getClockInfo(
-      traineeId
-    );
-    postInfo.traineeId = traineeId;
-    console.log("*签到模式*\n", config.modeCN);
-    if (config.mode === "in") {
-      //执行签到模式
-      if (isSignin) {
-        if (config.reSign) {
-          if (!isSignout) {
-            console.log("已签到,重新签到");
-            const form = await getClockForm(postInfo, SIGN_STATUS.IN);
-            return await updateClock(form);
+    const maxRetries = 3; // 最大重试次数
+    let retryCount = 0;
+
+    const attemptClock = async () => {
+      try {
+        const resp = await $http.post(apis.clockDefault, {
+          planId: taskInfo.planId,
+        });
+        const { clockVo, unStartClockVo } = resp;
+        const traineeId = clockVo?.traineeId || unStartClockVo?.traineeId;
+        console.log(">> 获取traineeId成功：", traineeId);
+        const { res, postInfo, isSignin, isSignout } = await getClockInfo(
+          traineeId
+        );
+        postInfo.traineeId = traineeId;
+        console.log("*签到模式*\n", config.modeCN);
+        
+        if (config.mode === "in") {
+          // 执行签到模式
+          if (isSignin) {
+            if (config.reSign) {
+              if (!isSignout) {
+                console.log("已签到,重新签到");
+                const form = await getClockForm(postInfo, SIGN_STATUS.IN);
+                return await updateClock(form);
+              } else {
+                return {
+                  res: true,
+                  data: "已签退,无法进行签到",
+                };
+              }
+            } else {
+              return {
+                res: true,
+                data: "已签到,未开启重新签到",
+              };
+            }
           } else {
-            return {
-              res: true,
-              data: "已签退,无法进行签到",
-            };
+            // 首次签到
+            const form = await getClockForm(postInfo, SIGN_STATUS.IN);
+            // return await newClock(form);
+            return await newClockOut(form);
           }
         } else {
-          return {
-            res: true,
-            data: "已签到,未开启重新签到",
-          };
+          // 执行签退模式
+          if (isSignout) {
+            if (config.reSign) {
+              console.log("已签退,重新签退");
+              const form = await getClockForm(postInfo, SIGN_STATUS.OUT);
+              return await updateClock(form);
+            } else {
+              return {
+                res: true,
+                data: "已签退,未开启重新签退",
+              };
+            }
+          } else {
+            //首次签退
+            const form = await getClockForm(postInfo, SIGN_STATUS.OUT);
+            return await newClockOut(form);
+            // const { isSignout: success } = await getClockInfo(traineeId);
+            // return {
+            //   res: success,
+            //   data: success ? "签退成功" : "签退失败",
+            // };
+          }
         }
-      } else {
-        // 首次签到
-        const form = await getClockForm(postInfo, SIGN_STATUS.IN);
-        // return await newClock(form);
-        return await newClockOut(form);
-      }
-    } else {
-      //执行签退模式
-      if (isSignout) {
-        if (config.reSign) {
-          console.log("已签退,重新签退");
-          const form = await getClockForm(postInfo, SIGN_STATUS.OUT);
-          return await updateClock(form);
+      } catch (error) {
+        console.error(`${config.modeCN}失败,错误信息: ${error.message}`);
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`正在进行第 ${retryCount} 次重试...`);
+          return await attemptClock();
         } else {
-          return {
-            res: true,
-            data: "已签退,未开启重新签退",
-          };
+          throw new Error(`${config.modeCN}失败,已达到最大重试次数`);
         }
-      } else {
-        //首次签退
-        const form = await getClockForm(postInfo, SIGN_STATUS.OUT);
-        return await newClockOut(form);
-        // const { isSignout: success } = await getClockInfo(traineeId);
-        // return {
-        //   res: success,
-        //   data: success ? "签退成功" : "签退失败",
-        // };
       }
-    }
+    };
+
+    return await attemptClock();
   };
   const getClockInfo = async (traineeId) => {
     const { clockInfo, postInfo, canSign } = await $http.post(
