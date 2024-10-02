@@ -697,30 +697,30 @@ async function run(mode) {
   let results = [];
 
   let processConfig = parseEnvArgv(process.argv);
-  if (processConfig) {
-    console.log("====使用命令行配置====");
-    const confTemp = {
-      username: "",
-      password: "",
-      openId: "",
-      unionId: "",
-      sign: true,
-      reSign: false,
-      location: "",
-      signImagePath: "",
-      needReport: false,
-      qmsgKey: "",
-      qmsgTo: "",
-      wxPusherToken: "",
-    };
-    processConfig.accounts = processConfig.accounts.map((e) => ({
-      ...confTemp,
-      ...e,
-    }));
-    config = processConfig;
-  } else {
-    console.log("====使用config.js中配置====");
-  }
+  // if (processConfig) {
+  //   console.log("====使用命令行配置====");
+  //   const confTemp = {
+  //     username: "",
+  //     password: "",
+  //     openId: "",
+  //     unionId: "",
+  //     sign: true,
+  //     reSign: false,
+  //     location: "",
+  //     signImagePath: "",
+  //     needReport: false,
+  //     qmsgKey: "",
+  //     qmsgTo: "",
+  //     wxPusherToken: "",
+  //   };
+  //   processConfig.accounts = processConfig.accounts.map((e) => ({
+  //     ...confTemp,
+  //     ...e,
+  //   }));
+  //   config = processConfig;
+  // } else {
+  //   console.log("====使用config.js中配置====");
+  // }
 
   for (const account of config.accounts) {
     account.mode = mode;
@@ -745,39 +745,39 @@ async function run(mode) {
   }
 }
 
-// 签到函数
-const signIn = async () => {
-  console.log(
-    "执行签到...",
-    new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })
-  );
-  await run("in");
+// 新增一个立即执行函数
+const executeImmediately = async () => {
+  const mode = process.argv[2];
+  if (mode === 'in' || mode === 'out') {
+    console.log(`立即执行${mode === 'in' ? '签到' : '签退'}...`);
+    await run(mode);
+  } else {
+    console.log('无效的参数。请使用 "in" 进行签到或 "out" 进行签退。');
+  }
 };
 
-// 签退函数
-const signOut = async () => {
-  console.log(
-    "执行签退...",
-    new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })
-  );
-  await run("out");
-};
+// 主逻辑
+if (process.argv.length > 2) {
+  // 如果有命令行参数，立即执行
+  executeImmediately();
+} else {
+  // 否则，设置定时任务
+  // 从配置中获取签到和签退时间
+  const [signInHour, signInMinute] = config.signInTime.split(':');
+  const [signOutHour, signOutMinute] = config.signOutTime.split(':');
 
-// 从配置中获取签到和签退时间
-const [signInHour, signInMinute] = config.signInTime.split(":");
-const [signOutHour, signOutMinute] = config.signOutTime.split(":");
+  // 设置定时任务
+  cron.schedule(`${signInMinute} ${signInHour} * * *`, () => run('in'), {
+    scheduled: true,
+    timezone: 'Asia/Shanghai',
+  });
 
-// 设置定时任务
-cron.schedule(`${signInMinute} ${signInHour} * * *`, signIn, {
-  scheduled: true,
-  timezone: "Asia/Shanghai",
-});
+  cron.schedule(`${signOutMinute} ${signOutHour} * * *`, () => run('out'), {
+    scheduled: true,
+    timezone: 'Asia/Shanghai',
+  });
 
-cron.schedule(`${signOutMinute} ${signOutHour} * * *`, signOut, {
-  scheduled: true,
-  timezone: "Asia/Shanghai",
-});
-
-console.log("xybSign服务已启动");
-console.log(`签到时间: ${config.signInTime}`);
-console.log(`签退时间: ${config.signOutTime}`);
+  console.log('xybSign服务已启动');
+  console.log(`签到时间: ${config.signInTime}`);
+  console.log(`签退时间: ${config.signOutTime}`);
+}
