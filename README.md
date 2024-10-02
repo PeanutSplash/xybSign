@@ -1,4 +1,3 @@
-
 # xybSign
 
 校友邦 多用户 自动签到(上传图片)、填写周报
@@ -36,6 +35,10 @@
   wxPusherToken: "SPT_HZNxQAgxpU2oZxWveCWJOWOFOc62",//可选
 }
 ```
+
+wxPusher推送示例：
+
+<img src="https://github.com/user-attachments/assets/5d4b776c-b789-44d5-83a7-5d08c126bd49" alt="wxPusher推送示例" width="300" />
 
 ### 2. 安装依赖
 
