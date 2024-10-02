@@ -150,40 +150,32 @@ async function xybSign(config) {
     let results = [];
     for (let task of taskInfos) {
       if (task.needSign) {
-        results.push(`${config.modeCN}:`);
         if (config.sign) {
           try {
             const { data } = await doClock(task);
-            results.push(data);
+            results.push(`${config.modeCN}: ${data}`);
           } catch (err) {
-            results.push(`${config.modeCN}失败${err}`);
+            results.push(`${config.modeCN}: 失败 (${err})`);
           }
         } else {
-          results.push(`未开启自动${config.modeCN}`);
+          results.push(`${config.modeCN}: 未开启`);
         }
       }
       if (task.needWeekBlogs) {
-        // console.log("填写周报:");
-        results.push("填写周报:");
         if (config.needReport) {
           try {
             let weekBlogRes = await doWeekBlogs(task);
-            if (weekBlogRes) {
-              results.push(weekBlogRes);
-            } else {
-              results.push("无");
-            }
+            results.push(`周报: ${weekBlogRes || '无需填写'}`);
           } catch (err) {
-            results.push(`填写周报失败${err}`);
+            results.push(`周报: 失败 (${err})`);
           }
         } else {
-          results.push("未开启自动填写周报");
-          // console.log("未开启自动填写周报");
+          results.push("周报: 未开启");
         }
       }
     }
     if (!results.length) {
-      return "今日没有还未完成的任务";
+      return "今日没有待完成的任务";
     }
     return results.join("\n");
   };
@@ -631,8 +623,7 @@ async function xybSign(config) {
     }
     const tasks = await getTasks();
     const result = await doTasks(tasks);
-    results += `###${accountInfo.loginer}###
-${result}`;
+    results = `${accountInfo.loginer}的任务执行结果:\n${result}`;
     // await sendMsg(result);
   };
   await xyb();
