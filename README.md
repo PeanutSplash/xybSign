@@ -27,11 +27,11 @@
 
 ```javascript
 {
-  username: "16602046914", //用户名
-  password: "abc789456", //密码
+  username: "16698730875", //用户名
+  password: "asdasduyg", //密码
   sign: true, //是否自动签到
   reSign: false, //是否重新签到
-  location: "113.936557,22.540476999999974", //经纬度 (可选)
+  location: "102.936557,21.547699", //经纬度 (可选)
   wxPusherToken: "SPT_HZNxQAgxpU2oZxWveCWJOWOFOc62",//可选
 }
 ```
