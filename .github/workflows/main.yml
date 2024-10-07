@@ -1,33 +1,37 @@
-name: 签到 # yml文件名
- 
+name: Daily Sign In/Out
+
 on:
+  schedule:
+    - cron: "0 1 * * *" # UTC 1:00 (北京时间 9:00)
+    - cron: "0 10 * * *" # UTC 10:00 (北京时间 18:00)
   workflow_dispatch:
-  schedule:   
-    # https://crontab.guru/
-    # UTC 时间，中国时区应减 8
-    #         ┌────────── minute (0 - 59)
-    #         │ ┌──────── hour (0 - 23)
-    #         │ │ ┌────── day of the month (1 - 31)
-    #         │ │ │ ┌──── month (1 - 12 or JAN-DEC)
-    #         │ │ │ │ ┌── day of the week (0 - 6 or SUN-SAT)
-    #         │ │ │ │ │
-    - cron: '0 1 * * *'
- 
+
 jobs:
-  run-check-in: # 任务名
+  sign:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '20.x'
-          
-      - name: 安装依赖  
-        run: |
-          npm install
 
-      - name: 运行签到
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run sign in/out script
         run: |
-          node ./index.js '${{ secrets.XYB }}'
+          HOUR=$(TZ='Asia/Shanghai' date +%H)
+          if [[ $HOUR == "09" ]]; then
+            node index.js in
+          elif [[ $HOUR == "18" ]]; then
+            node index.js out
+          else
+            echo "不在签到/签退时间范围内"
+          fi
+        env:
+          TZ: Asia/Shanghai
+          XYB_CONFIG: ${{ secrets.XYB_CONFIG }}
