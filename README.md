@@ -9,7 +9,7 @@
 - 可选自定义位置
 - 支持上传签到图片
 - 自动填写周报(可选)
-- 支持消息推送(qmsg酱和WxPusher)
+- 支持消息推送(qmsg 酱和 WxPusher)
 
 ## 使用方法
 
@@ -20,8 +20,7 @@
 - 在 `accounts` 数组中添加用户信息
 - 设置 `signInTime` 和 `signOutTime` 定义签到和签退时间
 - 可选: 配置 `qmsgKey`, `qmsgTo` 和 `wxPusherToken` 用于消息推送
-- wxPusherToken使用的是极简推送,获取方式请参考 https://wxpusher.zjiecode.com/docs/#/?id=spt
-
+- wxPusherToken 使用的是极简推送,获取方式请参考 https://wxpusher.zjiecode.com/docs/#/?id=spt
 
 配置示例:
 
@@ -36,7 +35,7 @@
 }
 ```
 
-wxPusher推送示例：
+wxPusher 推送示例：
 
 <img src="https://github.com/user-attachments/assets/5d4b776c-b789-44d5-83a7-5d08c126bd49" alt="wxPusher推送示例" width="300" />
 
@@ -68,11 +67,30 @@ node index.js out
 node index.js
 ```
 
+### 4. 使用 GitHub Actions 自动执行
+
+本项目支持使用 GitHub Actions 自动执行签到和签退操作。按照以下步骤设置：
+
+1. 在 GitHub 仓库中，转到"Settings" > "Secrets and variables" > "Actions"。
+
+2. 点击"New Environment secrets"，创建一个名为`XYB_CONFIG`的新密钥。
+
+3. 在`XYB_CONFIG`的值中，粘贴您的`config.js`文件的内容（不包括`module.exports =`部分）。
+
+4. GitHub Actions 将根据`.github/workflows/main.yml`文件中定义的计划自动运行签到和签退脚本。默认设置为：
+
+   - 每天 UTC 时间 1:00（北京时间 9:00）执行签到
+   - 每天 UTC 时间 10:00（北京时间 18:00）执行签退
+
+5. 您也可以在 GitHub 仓库的"Actions"标签页中手动触发工作流程。
+
+注意：请确保您的配置信息安全，不要直接将敏感信息提交到公开仓库中。
+
 ## 注意事项
 
 - 请确保提供的用户名和密码正确
 - 如果使用自定义位置,请确保提供的经纬度准确
-- 消息推送需要正确配置对应的key和token
+- 消息推送需要正确配置对应的 key 和 token
 
 ## 免责声明
 
