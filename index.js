@@ -8,6 +8,16 @@ const FormData = require("form-data");
 const md5 = require("blueimp-md5");
 const cron = require("node-cron");
 
+// 如果环境变量中存在配置，则覆盖本地配置
+if (process.env.XYB_CONFIG) {
+  try {
+    const envConfig = JSON.parse(process.env.XYB_CONFIG);
+    config = { ...config, ...envConfig };
+  } catch (error) {
+    console.error("Error parsing XYB_CONFIG:", error);
+  }
+}
+
 async function xybSign(config) {
   let results = "";
   const baseUrl = "https://xcx.xybsyw.com/";
