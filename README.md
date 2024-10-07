@@ -1,97 +1,113 @@
 # xybSign
 
-校友邦 多用户 自动签到(上传图片)、填写周报
+校友邦多用户自动签到系统 - 支持图片上传和周报填写
 
-## 功能特点
+## 主要功能 🌟
 
-- 支持多用户配置
-- 自动签到和签退
-- 可选自定义位置
-- 支持上传签到图片
-- 自动填写周报(可选)
-- 支持消息推送(qmsg 酱和 WxPusher)
+- 🧑‍🤝‍🧑 多用户配置支持
+- 🕰️ 自动签到和签退
+- 📍 自定义位置选项
+- 📸 签到图片上传
+- 📝 自动周报填写(可选)
+- 📢 消息推送集成(支持 qmsg 酱和 WxPusher)
 
-## 使用方法
+## 使用指南 📖
 
-### 1. 配置
+### 1. 配置设置 ⚙️
 
-修改 `config.js` 文件:
+编辑 `config.js` 文件:
 
 - 在 `accounts` 数组中添加用户信息
-- 设置 `signInTime` 和 `signOutTime` 定义签到和签退时间
-- 可选: 配置 `qmsgKey`, `qmsgTo` 和 `wxPusherToken` 用于消息推送
-- wxPusherToken 使用的是极简推送,获取方式请参考 https://wxpusher.zjiecode.com/docs/#/?id=spt
+- 设置 `signInTime` 和 `signOutTime` 来定义签到签退时间
+- 可选: 配置 `qmsgKey`, `qmsgTo` 和 `wxPusherToken` 以启用消息推送
+- WxPusher Token 获取方式请参考 [极简推送文档](https://wxpusher.zjiecode.com/docs/#/?id=spt)
 
 配置示例:
 
 ```javascript
 {
-  username: "16698730875", //用户名
-  password: "asdasduyg", //密码
-  sign: true, //是否自动签到
-  reSign: false, //是否重新签到
-  location: "102.936557,21.547699", //经纬度 (可选)
-  wxPusherToken: "SPT_HZNxQAgxpU2oZxWveCWJOWOFOc62",//可选
+  username: "16698730875", // 用户名
+  password: "asdasduyg",   // 密码
+  sign: true,              // 是否自动签到
+  reSign: false,           // 是否重新签到
+  location: "102.936557,21.547699", // 经纬度 (可选)
+  wxPusherToken: "SPT_HZNxQAgxpU2oZxWveCWJOWOFOc62", // 可选
 }
 ```
 
-wxPusher 推送示例：
+WxPusher 推送效果:
 
-<img src="https://github.com/user-attachments/assets/5d4b776c-b789-44d5-83a7-5d08c126bd49" alt="wxPusher推送示例" width="300" />
+<img src="https://github.com/user-attachments/assets/5d4b776c-b789-44d5-83a7-5d08c126bd49" alt="WxPusher推送示例" width="300" />
 
-### 2. 安装依赖
+### 2. 安装依赖 📦
 
-在项目目录下运行:
+在项目根目录执行:
 
-```
+```bash
 npm install
 ```
 
-### 3. 运行
+### 3. 运行程序 🚀
 
-执行签到（单次）:
+执行单次签到:
 
-```
+```bash
 node index.js in
 ```
 
-执行签退（单次）:
+执行单次签退:
 
-```
+```bash
 node index.js out
 ```
 
-自动签到签退（每天执行）:
+启动自动签到签退(每日执行):
 
-```
+```bash
 node index.js
 ```
 
-### 4. 使用 GitHub Actions 自动执行
+长期运行推荐使用 pm2:
 
-本项目支持使用 GitHub Actions 自动执行签到和签退操作。按照以下步骤设置：
+```bash
+# 安装 pm2
+npm install -g pm2
 
-1. 在 GitHub 仓库中，转到"Settings" > "Secrets and variables" > "Actions"。
+# 启动应用
+pm2 start index.js --name "xybSign"
 
-2. 点击"New Environment secrets"，创建一个名为`XYB_CONFIG`的新密钥。
+# 查看运行状态
+pm2 list
 
-3. 在`XYB_CONFIG`的值中，粘贴您的`config.js`文件的内容（不包括`module.exports =`部分）。
+# 查看日志
+pm2 logs xybSign
+```
 
-4. GitHub Actions 将根据`.github/workflows/main.yml`文件中定义的计划自动运行签到和签退脚本。默认设置为：
+### 4. 利用 GitHub Actions 自动执行 🤖
 
-   - 每天 UTC 时间 1:00（北京时间 9:00）执行签到
-   - 每天 UTC 时间 10:00（北京时间 18:00）执行签退
+本项目支持通过 GitHub Actions 自动执行签到签退。设置步骤如下:
 
-5. 您也可以在 GitHub 仓库的"Actions"标签页中手动触发工作流程。
+1. 在 GitHub 仓库中,进入 "Settings" > "Secrets and variables" > "Actions"。
 
-注意：请确保您的配置信息安全，不要直接将敏感信息提交到公开仓库中。
+2. 点击 "New Environment secrets",创建名为 `XYB_CONFIG` 的新密钥。
 
-## 注意事项
+3. 在 `XYB_CONFIG` 值中粘贴 `config.js` 文件内容(不包含 `module.exports =` 部分)。
 
-- 请确保提供的用户名和密码正确
-- 如果使用自定义位置,请确保提供的经纬度准确
-- 消息推送需要正确配置对应的 key 和 token
+4. GitHub Actions 将根据 `.github/workflows/main.yml` 文件中的计划自动运行脚本:
 
-## 免责声明
+   - 每天 UTC 1:00 (北京时间 9:00) 执行签到
+   - 每天 UTC 10:00 (北京时间 18:00) 执行签退
 
-本项目仅供学习和参考使用,请勿用于任何商业用途。使用本项目造成的任何法律责任由使用者自行承担,与本项目无关。
+5. 您也可以在 GitHub 仓库的 "Actions" 标签页中手动触发工作流程。
+
+注意: 请确保妥善保管配置信息,切勿将敏感信息直接提交到公开仓库。
+
+## 注意事项 ⚠️
+
+- 请确保提供的用户名和密码正确无误
+- 使用自定义位置时,请确保提供的经纬度准确
+- 消息推送功能需要正确配置相应的 key 和 token
+
+## 免责声明 📜
+
+本项目仅供学习和参考使用,禁止用于任何商业目的。使用本项目造成的任何法律责任均由使用者自行承担,与本项目开发者无关。
