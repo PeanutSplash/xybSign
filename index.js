@@ -12,7 +12,8 @@ const cron = require("node-cron");
 if (process.env.XYB_CONFIG) {
   try {
     const envConfig = JSON.parse(process.env.XYB_CONFIG);
-    config = { ...config, ...envConfig };
+    config = envConfig;
+    console.log("环境变量中存在配置，已覆盖本地配置：", config);
   } catch (error) {
     console.error("Error parsing XYB_CONFIG:", error);
   }
@@ -175,7 +176,7 @@ async function xybSign(config) {
         if (config.needReport) {
           try {
             let weekBlogRes = await doWeekBlogs(task);
-            results.push(`周报: ${weekBlogRes || '无需填写'}`);
+            results.push(`周报: ${weekBlogRes || "无需填写"}`);
           } catch (err) {
             results.push(`周报: 失败 (${err})`);
           }
@@ -278,12 +279,14 @@ async function xybSign(config) {
         const { clockVo, unStartClockVo } = resp;
         const traineeId = clockVo?.traineeId || unStartClockVo?.traineeId;
         console.log(">> 获取traineeId成功：", traineeId);
-        
+
         const performClockOperation = async () => {
-          const { res, postInfo, isSignin, isSignout } = await getClockInfo(traineeId);
+          const { res, postInfo, isSignin, isSignout } = await getClockInfo(
+            traineeId
+          );
           postInfo.traineeId = traineeId;
           console.log("*签到模式*\n", config.modeCN);
-          
+
           let result;
           if (config.mode === "in") {
             // 执行签到模式
@@ -329,19 +332,21 @@ async function xybSign(config) {
               result = await newClockOut(form);
             }
           }
-          
+
           // 重新检查签到/签退状态
-          const { isSignin: newIsSignin, isSignout: newIsSignout } = await getClockInfo(traineeId);
-          const expectedStatus = config.mode === "in" ? newIsSignin : newIsSignout;
-          
+          const { isSignin: newIsSignin, isSignout: newIsSignout } =
+            await getClockInfo(traineeId);
+          const expectedStatus =
+            config.mode === "in" ? newIsSignin : newIsSignout;
+
           if (!expectedStatus) {
             console.log(`${config.modeCN}状态不符合预期，重新尝试`);
             return await performClockOperation();
           }
-          
+
           return result;
         };
-        
+
         return await performClockOperation();
       } catch (error) {
         console.error(`${config.modeCN}失败,错误信息: ${error.message}`);
@@ -745,7 +750,9 @@ async function run(mode) {
   // 为每个用户单独发送消息
   for (const result of results) {
     console.log(`${result.username}的执行结果:\n${result.result}`);
-    const account = config.accounts.find(acc => acc.username === result.username);
+    const account = config.accounts.find(
+      (acc) => acc.username === result.username
+    );
     if (account.qmsgKey) {
       await sendMsg(result.result, account, result.username);
     }
@@ -758,8 +765,8 @@ async function run(mode) {
 // 新增一个立即执行函数
 const executeImmediately = async () => {
   const mode = process.argv[2];
-  if (mode === 'in' || mode === 'out') {
-    console.log(`立即执行${mode === 'in' ? '签到' : '签退'}...`);
+  if (mode === "in" || mode === "out") {
+    console.log(`立即执行${mode === "in" ? "签到" : "签退"}...`);
     await run(mode);
   } else {
     console.log('无效的参数。请使用 "in" 进行签到或 "out" 进行签退。');
@@ -773,21 +780,21 @@ if (process.argv.length > 2) {
 } else {
   // 否则，设置定时任务
   // 从配置中获取签到和签退时间
-  const [signInHour, signInMinute] = config.signInTime.split(':');
-  const [signOutHour, signOutMinute] = config.signOutTime.split(':');
+  const [signInHour, signInMinute] = config.signInTime.split(":");
+  const [signOutHour, signOutMinute] = config.signOutTime.split(":");
 
   // 设置定时任务
-  cron.schedule(`${signInMinute} ${signInHour} * * *`, () => run('in'), {
+  cron.schedule(`${signInMinute} ${signInHour} * * *`, () => run("in"), {
     scheduled: true,
-    timezone: 'Asia/Shanghai',
+    timezone: "Asia/Shanghai",
   });
 
-  cron.schedule(`${signOutMinute} ${signOutHour} * * *`, () => run('out'), {
+  cron.schedule(`${signOutMinute} ${signOutHour} * * *`, () => run("out"), {
     scheduled: true,
-    timezone: 'Asia/Shanghai',
+    timezone: "Asia/Shanghai",
   });
 
-  console.log('xybSign服务已启动');
+  console.log("xybSign服务已启动");
   console.log(`签到时间: ${config.signInTime}`);
   console.log(`签退时间: ${config.signOutTime}`);
 }
