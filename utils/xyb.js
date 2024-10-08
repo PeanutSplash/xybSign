@@ -1,3 +1,5 @@
+import moment from 'moment-timezone'
+
 const md5 = require("blueimp-md5");
 const Q = new RegExp(
     "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]"
@@ -206,10 +208,11 @@ const Q = new RegExp(
         "n",
       ],
       a = [];
-    for (let u = 0; u < 62; u++) a.push(u + "");
-    let o = Math.round(new Date().getTime() / 1e3),
-      i = F(a, 20),
-      r = "";
+    for (let u = 0; u < 62; u++) a.push(u + '');
+    // 使用东八区时间
+    let o = moment().tz('Asia/Shanghai').unix();
+    let i = F(a, 20);
+    let r = '';
     i.forEach((e, t) => {
       r += n[e];
     });
@@ -334,9 +337,9 @@ const Q = new RegExp(
 const t = {
   Z: {
     set(e, t, n) {
-      const a = new Date();
-      a.setDate(a.getDate() + n),
-        (document.cookie = e + "=" + t + ";expires=" + a);
+      // 使用东八区设置 cookie 过期时间
+      const a = moment().tz('Asia/Shanghai').add(n, 'days').toDate();
+      document.cookie = `${e}=${t};expires=${a.toUTCString()}`;
     },
     get(e) {
       let t = document.cookie.replace(/\s/g, "").split(";");
@@ -360,9 +363,12 @@ const t = {
     },
     clear() {
       let e = document.cookie.match(/[^ =;]+(?=\=)/g);
-      if (e)
-        for (let t = e.length; t--; )
-          document.cookie = e[t] + "=0;expires=" + new Date(0).toUTCString();
+      if (e) {
+        for (let t = e.length; t--; ) {
+          // 使用东八区的当前时间作为过期时间
+          document.cookie = `${e[t]}=0;expires=${moment().tz('Asia/Shanghai').toDate().toUTCString()}`;
+        }
+      }
     },
   },
 };
