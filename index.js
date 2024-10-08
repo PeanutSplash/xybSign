@@ -7,15 +7,22 @@ const fs = require("fs");
 const FormData = require("form-data");
 const md5 = require("blueimp-md5");
 const cron = require("node-cron");
+const moment = require("moment-timezone");
+
+// 添加日志函数
+const log = (message) => {
+  const timestamp = moment().tz("Asia/Shanghai").format();
+  console.log(`[${timestamp}] ${message}`);
+};
 
 // 如果环境变量中存在配置，则覆盖本地配置
 if (process.env.XYB_CONFIG) {
   try {
     const envConfig = JSON.parse(process.env.XYB_CONFIG);
     config = envConfig;
-    console.log("环境变量中存在配置，已覆盖本地配置：", config);
+    log("环境变量中存在配置，已覆盖本地配置：" + JSON.stringify(config));
   } catch (error) {
-    console.error("Error parsing XYB_CONFIG:", error);
+    log("Error parsing XYB_CONFIG: " + error.message);
   }
 }
 
@@ -25,6 +32,7 @@ async function xybSign(config) {
   // const baseUrl2 = "https://app.xybsyw.com/";
   const $http = {
     get: function (url, data) {
+      log(`GET 请求 ${url}，请求体：${JSON.stringify(data)}`);
       return axios
         .get((duration ? baseUrl2 : baseUrl) + url, {
           params: data,
@@ -41,6 +49,7 @@ async function xybSign(config) {
         });
     },
     post: function (url, data) {
+      log(`POST 请求 ${url}，请求体：${JSON.stringify(data)}`);
       return axios
         .post(baseUrl + url, data, {
           headers: {
@@ -105,20 +114,26 @@ async function xybSign(config) {
   };
 
   const login = async () => {
-    console.log(">> 执行登录");
-    const { sessionId, loginerId, loginKey } = await $http.post(apis.login, {
-      username: config.username,
-      password: config.password,
-      openId: config.openId,
-      unionId: config.unionId,
-      model: "Macmini9,1",
-      brand: "apple",
-      platform: "mac",
-      system: "Mac",
-      deviceId: "",
-    });
-    cookie = "JSESSIONID=" + sessionId;
-    accountInfo.loginerId = loginerId;
+    log(">> 执行登录");
+    try {
+      const { sessionId, loginerId, loginKey } = await $http.post(apis.login, {
+        username: config.username,
+        password: config.password,
+        openId: config.openId,
+        unionId: config.unionId,
+        model: "Macmini9,1",
+        brand: "apple",
+        platform: "mac",
+        system: "Mac",
+        deviceId: "",
+      });
+      cookie = "JSESSIONID=" + sessionId;
+      accountInfo.loginerId = loginerId;
+      log("登录成功，loginerId: " + loginerId);
+    } catch (error) {
+      log("登录失败: " + error.message);
+      throw error;
+    }
   };
 
   const getProjects = async () => {
@@ -637,18 +652,20 @@ async function xybSign(config) {
     try {
       await login();
       await getAccountInfo();
-      // await duration();
       await getIP();
+      log("初始化完成，开始执行任务");
     } catch (err) {
       results += `### 账号(${config.username.substr(
         config.username.length - 4
       )}) ###\n${err}\n`;
+      log("初始化失败: " + err.message);
       return;
     }
     const tasks = await getTasks();
+    log("获取到的任务: " + JSON.stringify(tasks));
     const result = await doTasks(tasks);
     results = `${accountInfo.loginer}的任务执行结果:\n${result}`;
-    // await sendMsg(result);
+    log("任务执行完成: " + results);
   };
   await xyb();
   return {
@@ -712,52 +729,32 @@ async function run(mode) {
   let results = [];
 
   let processConfig = parseEnvArgv(process.argv);
-  // if (processConfig) {
-  //   console.log("====使用命令行配置====");
-  //   const confTemp = {
-  //     username: "",
-  //     password: "",
-  //     openId: "",
-  //     unionId: "",
-  //     sign: true,
-  //     reSign: false,
-  //     location: "",
-  //     signImagePath: "",
-  //     needReport: false,
-  //     qmsgKey: "",
-  //     qmsgTo: "",
-  //     wxPusherToken: "",
-  //   };
-  //   processConfig.accounts = processConfig.accounts.map((e) => ({
-  //     ...confTemp,
-  //     ...e,
-  //   }));
-  //   config = processConfig;
-  // } else {
-  //   console.log("====使用config.js中配置====");
-  // }
+  log("开始执行" + mode + "模式");
 
   for (const account of config.accounts) {
     account.mode = mode;
     account.modeCN = mode === "in" ? "签到" : "签退";
     account.password = md5(account.password);
+    log("开始处理账号: " + account.username);
     const result = await xybSign(account);
     results.push(result);
-    console.log(`====当前账号(${account.username})执行结束====`);
+    log("账号(" + account.username + ")执行结束");
   }
-  console.log("====所有账号执行结束====");
+  log("所有账号执行结束");
 
   // 为每个用户单独发送消息
   for (const result of results) {
-    console.log(`${result.username}的执行结果:\n${result.result}`);
+    log(result.username + "的执行结果:\n" + result.result);
     const account = config.accounts.find(
       (acc) => acc.username === result.username
     );
     if (account.qmsgKey) {
       await sendMsg(result.result, account, result.username);
+      log("已通过Qmsg发送消息给" + result.username);
     }
     if (account.wxPusherToken) {
       await sendWxPusherMsg(result.result, account, result.username);
+      log("已通过WxPusher发送消息给" + result.username);
     }
   }
 }
@@ -766,24 +763,22 @@ async function run(mode) {
 const executeImmediately = async () => {
   const mode = process.argv[2];
   if (mode === "in" || mode === "out") {
-    console.log(`立即执行${mode === "in" ? "签到" : "签退"}...`);
+    log("立即执行" + (mode === "in" ? "签到" : "签退") + "...");
     await run(mode);
   } else {
-    console.log('无效的参数。请使用 "in" 进行签到或 "out" 进行签退。');
+    log('无效的参数。请使用 "in" 进行签到或 "out" 进行签退。');
   }
 };
 
 // 主逻辑
 if (process.argv.length > 2) {
-  // 如果有命令行参数，立即执行
+  log("检测到命令行参数，准备立即执行");
   executeImmediately();
 } else {
-  // 否则，设置定时任务
-  // 从配置中获取签到和签退时间
+  // 设置定时任务
   const [signInHour, signInMinute] = config.signInTime.split(":");
   const [signOutHour, signOutMinute] = config.signOutTime.split(":");
 
-  // 设置定时任务
   cron.schedule(`${signInMinute} ${signInHour} * * *`, () => run("in"), {
     scheduled: true,
     timezone: "Asia/Shanghai",
@@ -794,7 +789,7 @@ if (process.argv.length > 2) {
     timezone: "Asia/Shanghai",
   });
 
-  console.log("xybSign服务已启动");
-  console.log(`签到时间: ${config.signInTime}`);
-  console.log(`签退时间: ${config.signOutTime}`);
+  log("xybSign服务已启动");
+  log("签到时间: " + config.signInTime);
+  log("签退时间: " + config.signOutTime);
 }
