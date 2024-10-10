@@ -734,7 +734,8 @@ async function run(mode) {
   for (const account of config.accounts) {
     account.mode = mode;
     account.modeCN = mode === "in" ? "签到" : "签退";
-    account.password = md5(account.password);
+    const utf8Password = Buffer.from(account.password, "utf8");
+    account.password = md5(utf8Password);
     log("开始处理账号: " + account.username);
     const result = await xybSign(account);
     results.push(result);
