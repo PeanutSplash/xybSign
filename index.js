@@ -20,7 +20,7 @@ if (process.env.XYB_CONFIG) {
   try {
     const envConfig = JSON.parse(process.env.XYB_CONFIG);
     config = envConfig;
-    log("环境变量中存在配置，已覆盖本地配置：" + JSON.stringify(config));
+    log("环境变量中存在配置，已覆盖本地配置");
   } catch (error) {
     log("Error parsing XYB_CONFIG: " + error.message);
   }
