@@ -26,6 +26,13 @@ if (process.env.XYB_CONFIG) {
   }
 }
 
+const encryptPasswords = () => {
+  for (const account of config.accounts) {
+    const utf8Password = Buffer.from(account.password, "utf8");
+    account.password = md5(utf8Password);
+  }
+};
+
 async function xybSign(config) {
   let results = "";
   const baseUrl = "https://xcx.xybsyw.com/";
@@ -734,8 +741,6 @@ async function run(mode) {
   for (const account of config.accounts) {
     account.mode = mode;
     account.modeCN = mode === "in" ? "签到" : "签退";
-    const utf8Password = Buffer.from(account.password, "utf8");
-    account.password = md5(utf8Password);
     log("开始处理账号: " + account.username);
     const result = await xybSign(account);
     results.push(result);
@@ -774,9 +779,11 @@ const executeImmediately = async () => {
 // 主逻辑
 if (process.argv.length > 2) {
   log("检测到命令行参数，准备立即执行");
+  encryptPasswords();
   executeImmediately();
 } else {
   // 设置定时任务
+  encryptPasswords();
   const [signInHour, signInMinute] = config.signInTime.split(":");
   const [signOutHour, signOutMinute] = config.signOutTime.split(":");
 
